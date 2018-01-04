@@ -29,29 +29,34 @@ public:
 
 private:
     int n;  //размер образа
-    int p;  //размер ассоциации
-    int m;  //количество строк в матрице образа m*p=m
+    int p;  //размер ассоциации и количество рядов в матрице образа
+    int m;  //количество строк в матрице образа m*p=n
     int Q;  //количество пар образ - ассоциация, на которую обучена сеть
     double L;  //емкость сети
-    mat W;  //веса первого слоя p*n
-    mat W_; //веса второго слоя n*p
+    Mat<int> W;  //веса первого слоя p*n
+    Mat<int> W_; //веса второго слоя n*p
 
-    vector<mat> Xk; //список образов
-    vector<vec> Yk; //список ассоциаций
+    vector<Col<int>> Xk; //список образов
+    vector<Col<int>> Yk; //список ассоциаций
 
     string imgX;    //строка текущего образа
     string imgY;    //строка текущей ассоциации
 
-    mat X_; //подаваемый искаженный образ
+    Col<int> vecX;    //строка текущего образа
+    Col<int> vecY;    //строка текущей ассоциации
 
-    void ReadFromFileImg_Ass(char* path);   //считать пару образ - ассоциацию
-    mat ReadFromFileRecognImage(char* path);   //считать образ для распознавания
+    string imgX_;   //строка подаваемого образа
+    Col<int> vecX_; //подаваемый искаженный образ
+
+    void ReadFromFileImg_Ass(string path);   //считать пару образ - ассоциацию
+    Mat<int> ReadFromFileRecognImage(string path);   //считать образ для распознавания
     double CountL();  //почитать L
-    mat VecToMat(vec v);
-    vec StringToVec(string str);
-    string MatToImage(mat X);
+    Mat<int> VecToMat(Col<int> v);
+    Col<int> StringToVec(string str);
+    string VecToString(Col<int> X);
     void PrintImg(string img);
-    void AddX_Y(mat X, vec Y);  //добавить пару образ - ассоциация
+    void CountWeigths();
+    void AddX_Y(Mat<int> X, Col<int> Y);  //добавить пару образ - ассоциация
 };
 
 #endif // BIASSOCIATIVEMEMORY_H
