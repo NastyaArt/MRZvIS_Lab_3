@@ -7,6 +7,7 @@ using namespace std;
 void main(){
 
     BiAssociativeMemory BAM;
+    BAM.Recognize();
     return;
 }
 

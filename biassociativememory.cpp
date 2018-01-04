@@ -18,7 +18,10 @@ BiAssociativeMemory::BiAssociativeMemory()
             for (int i = 0; i < Q; i++)
             {
                 ReadFromFileImg_Ass("image" + to_string(i + 1) + ".txt");
+                cout << "\nImage " << i + 1 << ":" << endl;
                 PrintImg(imgX);
+                cout << "Association " << i + 1 << ":" << endl;
+                cout << imgY << endl;
                 vecX = StringToVec(imgX);
                 Xk.push_back(vecX);
                 vecY = StringToVec(imgY);
@@ -45,7 +48,10 @@ BiAssociativeMemory::BiAssociativeMemory()
                 cout << "Input file name:\n";
                 cin >> path;
                 ReadFromFileImg_Ass(path);
+                cout << "\nImage " << i + 1 << ":" << endl;
                 PrintImg(imgX);
+                cout << "Association " << i + 1 << ":" << endl;
+                cout << imgY << endl;
                 vecX = StringToVec(imgX);
                 Xk.push_back(vecX);
                 vecY = StringToVec(imgY);
@@ -59,20 +65,155 @@ BiAssociativeMemory::BiAssociativeMemory()
         }
     }
 
+    CountWeigths();
+
 }
 
 void BiAssociativeMemory::CountWeigths()
 {
+    Mat<int> A(n, p, fill::zeros);
 
-}
+    for (int i = 0; i < Q; i++)
+    {
+        A += Xk[i]*Yk[i].t();
+    }
 
-void BiAssociativeMemory::Educate()
-{
-
+    W = A;
+    W_ = A.t();
 }
 
 void BiAssociativeMemory::Recognize()
 {
+    int key;
+    cout << "Choose distorted image: \n"
+            << "1. Distorted image for image 1\n"
+            << "2. Distorted image for image 2\n"
+            << "3. Distorted image for image 3\n"
+            << "4. Original image 1\n"
+            << "5. Original image 2\n"
+            << "6. Original image 3\n"
+            << "7. Use your own distorted image\nChoose:";
+    cin >> key;
+    string path;
+    switch (key) {
+        case 1:{
+            path = "bad_image1.txt";
+            break;
+        }
+        case 2:{
+            path = "bad_image2.txt";
+            break;
+        }
+        case 3:{
+            path = "bad_image3.txt";
+            break;
+        }
+        case 4:{
+            path = "good_image1.txt";
+            break;
+        }
+        case 5:{
+            path = "good_image2.txt";
+            break;
+        }
+        case 6:{
+            path = "good_image3.txt";
+            break;
+        }
+        case 7:{
+            cout << "Input file name:\n";
+            cin >> path;
+            break;
+        }
+        default:{
+            printf("Error\n");
+            return;
+        }
+    }
+
+    ReadFromFileRecognImage(path);
+    cout << "\nDistorted image:" << endl;
+    PrintImg(imgX_);
+    vecX_ = StringToVec(imgX_);
+
+    Col<int> X_(n, fill::zeros);
+    old_vecX_ = X_;
+    Col<int> Y_(p, fill::zeros);
+    old_vecY_ = Y_;
+
+    cur_vecX_ = vecX_;
+    cur_vecY_ = Y_;
+
+    int iteration = 0;
+    bool find = true;
+
+    do{
+        old_vecY_ = cur_vecY_;
+        cur_vecY_ = conv_to<Col<int>>::from(cur_vecX_.t() * W);
+
+        for (int i = 0; i < p; i++)
+        {
+            int y;
+            y = F(cur_vecY_(i));
+            if (y != 0)
+                cur_vecY_(i) = y;
+            else
+                cur_vecY_(i)=old_vecY_(i);
+        }
+
+
+        old_vecX_ = cur_vecX_;
+        cur_vecX_ = conv_to<Col<int>>::from(cur_vecY_.t() * W_);
+
+        for (int i = 0; i < n; i++)
+        {
+            int x;
+            x = F(cur_vecX_(i));
+            if (x != 0)
+                cur_vecX_(i) = x;
+            else
+                cur_vecX_(i)=old_vecX_(i);
+        }
+
+        iteration++;
+
+        if (iteration > 10)
+        {
+            find = false;
+            break;
+        }
+
+    } while ((any(cur_vecY_ - old_vecY_)!=0 || any(cur_vecX_ - old_vecX_)!=0));
+
+    cout << "Iteratoins: " << iteration << endl;
+
+    if (find == false)
+    {
+        cout << "The image isn't recognized" << endl;
+        return;
+    }
+
+    for (int i = 0; i < Q; i++)
+    {
+        if (any(Yk[i] - cur_vecY_)!=1)
+        {
+            cout << "Recognized image:" << endl;
+            PrintImg(VecToString(Xk[i]));
+            return;
+        }
+    }
+    cout << "The image isn't recognized" << endl;
+    return;
+}
+
+int BiAssociativeMemory::F(int s)
+{
+    if (s < 0)
+        return -1;
+    if (s > 0)
+        return 1;
+
+    return 0;
 
 }
 
@@ -189,11 +330,43 @@ string BiAssociativeMemory::VecToString(Col<int> X)
 
 }
 
-Mat<int> BiAssociativeMemory::ReadFromFileRecognImage(string path)
+void BiAssociativeMemory::ReadFromFileRecognImage(string path)
 {
-    Mat<int> X;
+    string buf, X_;
+    int n_;
 
-    return X;
+    ifstream file(path);
+    if (!file.is_open())
+    {
+        cout << "The file can not be opened!\n";
+        return;
+    }
+    file >> n_;
+
+    if (n_!=n)
+    {
+        cout << "Error! The file contains incorrect data!" << endl;
+        return;
+    }
+
+    getline(file,  buf);
+
+    for (int i = 0; i < buf.length() || i < n; i++)
+    {
+        if (buf[i]!= DOT && buf[i]!= GRID)
+        {
+            cout << "Error! The file contains incorrect data!" << endl;
+            return;
+        }
+        if (i < n)
+        {
+            X_.push_back(buf[i]);
+        }
+    }
+    file.close();
+
+    imgX_ = X_;
+    return;
 }
 
 double BiAssociativeMemory::CountL()

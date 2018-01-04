@@ -24,7 +24,6 @@ class BiAssociativeMemory
 {
 public:
     BiAssociativeMemory();
-    void Educate();
     void Recognize();
 
 private:
@@ -48,8 +47,13 @@ private:
     string imgX_;   //строка подаваемого образа
     Col<int> vecX_; //подаваемый искаженный образ
 
+    Col<int> cur_vecX_; //значение искаженного образа на текущей итерации
+    Col<int> cur_vecY_; //значение искаженного образа на текущей итерации
+    Col<int> old_vecX_; //значение искаженного образа на предыдущей итерации
+    Col<int> old_vecY_; //значение искаженного образа на предыдущей итерации
+
     void ReadFromFileImg_Ass(string path);   //считать пару образ - ассоциацию
-    Mat<int> ReadFromFileRecognImage(string path);   //считать образ для распознавания
+    void ReadFromFileRecognImage(string path);   //считать образ для распознавания
     double CountL();  //почитать L
     Mat<int> VecToMat(Col<int> v);
     Col<int> StringToVec(string str);
@@ -57,6 +61,7 @@ private:
     void PrintImg(string img);
     void CountWeigths();
     void AddX_Y(Mat<int> X, Col<int> Y);  //добавить пару образ - ассоциация
+    int F(int s);
 };
 
 #endif // BIASSOCIATIVEMEMORY_H
